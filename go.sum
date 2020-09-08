@@ -1,0 +1,4 @@
+github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575 h1:kHaBemcxl8o/pQ5VM1c8PVE1PubbNx3mjUr09OqWGCs=
+github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575/go.mod h1:9d6lWj8KzO/fd/NrVaLscBKmPigpZpn5YawRPw+e3Yo=
+github.com/stamp/goADS v0.0.0-20200602203006-a943e2a91fec h1:7cQPKLqvuenxujM71yOHSYgyg5npPMNqr0EZchPeNu0=
+github.com/stamp/goADS v0.0.0-20200602203006-a943e2a91fec/go.mod h1:zsfdGqvytvukUzHKEnmLvzP0nX9S/duoC3mvknAAziU=
