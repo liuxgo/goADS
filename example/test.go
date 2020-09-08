@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/stamp/goADS"
+	"github.com/liuxoygo/goADS"
 
 	"os"
 	"os/signal"
