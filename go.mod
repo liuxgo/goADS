@@ -1,4 +1,4 @@
-module goADS
+module github.com/liuxoygo/goADS
 
 go 1.14
 
