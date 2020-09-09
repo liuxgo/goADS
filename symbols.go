@@ -645,8 +645,25 @@ func (symbol *ADSSymbol) Write(value string) error { /*{{{*/
 		return e
 	}
 
-	symbol.Self.conn.Write(symbol.Area, symbol.Offset, buf.Bytes())
-
+	//symbol.Self.conn.Write(symbol.Area, symbol.Offset, buf.Bytes())
+	handler, err := symbol.Self.conn.GetHandler(symbol.FullName)
+	if err != nil {
+		e := fmt.Errorf("Get handler by name failed, name: %s!", symbol.FullName)
+		log.Error(e)
+		return e
+	}
+	err = symbol.Self.conn.Write(0xF005, handler, buf.Bytes())
+	if err != nil {
+		e := fmt.Errorf("Write by handler failed, name: %s!", symbol.FullName)
+		log.Error(e)
+		return e
+	}
+	err = symbol.conn.ReleaseHandler(handler)
+	if err != nil {
+		e := fmt.Errorf("Release handler failed, name: %s!", symbol.FullName)
+		log.Error(e)
+		return e
+	}
 	return nil
 
 }
