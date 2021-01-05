@@ -524,127 +524,16 @@ func (symbol *ADSSymbol) Read() { /*{{{*/
 }
 
 /*}}}*/
-func (symbol *ADSSymbol) Write(value string) error { /*{{{*/
+
+func (symbol *ADSSymbol) Write() error { /*{{{*/
 	log.Debug("Write (", symbol.Area, ":", symbol.Offset, "): ", symbol.FullName)
-
-	if len(symbol.Childs) != 0 {
-		e := fmt.Errorf("Cannot write to a whole struct at once!")
+	data := make([]byte, 0, 4096)
+	data, err := symbol.pack(data)
+	if err != nil {
+		e := fmt.Errorf("Pack symbol failed, name: %s!", symbol.FullName)
 		log.Error(e)
 		return e
 	}
-
-	buf := bytes.NewBuffer([]byte{})
-
-	switch symbol.DataType {
-	case "BOOL":
-		v, e := strconv.ParseBool(value)
-		if e != nil {
-			return e
-		}
-
-		if v {
-			buf.Write([]byte{1})
-		} else {
-			buf.Write([]byte{0})
-		}
-	case "BYTE", "USINT": // Unsigned Short INT 0 to 255
-		v, e := strconv.ParseUint(value, 10, 8)
-		if e != nil {
-			return e
-		}
-
-		v8 := uint8(v)
-		binary.Write(buf, binary.LittleEndian, &v8)
-	case "UINT16", "UINT", "WORD":
-		v, e := strconv.ParseUint(value, 10, 16)
-		if e != nil {
-			return e
-		}
-
-		v16 := uint16(v)
-		binary.Write(buf, binary.LittleEndian, &v16)
-	case "UDINT", "DWORD":
-		v, e := strconv.ParseUint(value, 10, 32)
-		if e != nil {
-			return e
-		}
-
-		v32 := uint32(v)
-		binary.Write(buf, binary.LittleEndian, &v32)
-
-	case "SINT": // Short INT -128 to 127
-		v, e := strconv.ParseInt(value, 10, 8)
-		if e != nil {
-			return e
-		}
-
-		v8 := int8(v)
-		binary.Write(buf, binary.LittleEndian, &v8)
-	case "INT":
-		v, e := strconv.ParseInt(value, 10, 16)
-		if e != nil {
-			return e
-		}
-
-		v16 := int16(v)
-		binary.Write(buf, binary.LittleEndian, &v16)
-	case "DINT":
-		v, e := strconv.ParseInt(value, 10, 32)
-		if e != nil {
-			return e
-		}
-
-		v32 := int32(v)
-		binary.Write(buf, binary.LittleEndian, &v32)
-
-	case "REAL":
-		v, e := strconv.ParseFloat(value, 32)
-		if e != nil {
-			return e
-		}
-
-		v32 := math.Float32bits(float32(v))
-		binary.Write(buf, binary.LittleEndian, &v32)
-	case "LREAL":
-		v, e := strconv.ParseFloat(value, 64)
-		if e != nil {
-			return e
-		}
-
-		v64 := math.Float64bits(v)
-		binary.Write(buf, binary.LittleEndian, &v64)
-	case "STRING":
-		buf.Write([]byte(value))
-	/*case "TIME":
-		if stop-start != 4 {return}
-		i := binary.LittleEndian.Uint32(data[start:stop])
-		t := time.Unix(0, int64(uint64(i)*uint64(time.Millisecond))-int64(time.Hour) )
-
-		newValue = t.Truncate(time.Millisecond).Format("15:04:05.999999999")
-	case "TOD":
-		if stop-start != 4 {return}
-		i := binary.LittleEndian.Uint32(data[start:stop])
-		t := time.Unix(0, int64(uint64(i)*uint64(time.Millisecond))-int64(time.Hour) )
-
-		newValue = t.Truncate(time.Millisecond).Format("15:04")
-	case "DATE":
-		if stop-start != 4 {return}
-		i := binary.LittleEndian.Uint32(data[start:stop])
-		t := time.Unix(0, int64(uint64(i)*uint64(time.Second)) )
-
-		newValue = t.Truncate(time.Millisecond).Format("2006-01-02")
-	case "DT":
-		if stop-start != 4 {return}
-		i := binary.LittleEndian.Uint32(data[start:stop])
-		t := time.Unix(0, int64(uint64(i)*uint64(time.Second))-int64(time.Hour) )
-
-		newValue = t.Truncate(time.Millisecond).Format("2006-01-02 15:04:05")*/
-	default:
-		e := fmt.Errorf("Datatype '%s' write is not implemented yet!", symbol.DataType)
-		log.Error(e)
-		return e
-	}
-
 	//symbol.Self.conn.Write(symbol.Area, symbol.Offset, buf.Bytes())
 	handler, err := symbol.Self.conn.GetHandler(symbol.FullName)
 	if err != nil {
@@ -652,7 +541,7 @@ func (symbol *ADSSymbol) Write(value string) error { /*{{{*/
 		log.Error(e)
 		return e
 	}
-	err = symbol.Self.conn.Write(0xF005, handler, buf.Bytes())
+	err = symbol.Self.conn.Write(0xF005, handler, data)
 	if err != nil {
 		e := fmt.Errorf("Write by handler failed, name: %s!", symbol.FullName)
 		log.Error(e)
@@ -667,6 +556,150 @@ func (symbol *ADSSymbol) Write(value string) error { /*{{{*/
 	return nil
 
 }
+
+//func (symbol *ADSSymbol) Write(value string) error { /*{{{*/
+//	log.Debug("Write (", symbol.Area, ":", symbol.Offset, "): ", symbol.FullName)
+//
+//	if len(symbol.Childs) != 0 {
+//		e := fmt.Errorf("Cannot write to a whole struct at once!")
+//		log.Error(e)
+//		return e
+//	}
+//
+//	buf := bytes.NewBuffer([]byte{})
+//
+//	switch symbol.DataType {
+//	case "BOOL":
+//		v, e := strconv.ParseBool(value)
+//		if e != nil {
+//			return e
+//		}
+//
+//		if v {
+//			buf.Write([]byte{1})
+//		} else {
+//			buf.Write([]byte{0})
+//		}
+//	case "BYTE", "USINT": // Unsigned Short INT 0 to 255
+//		v, e := strconv.ParseUint(value, 10, 8)
+//		if e != nil {
+//			return e
+//		}
+//
+//		v8 := uint8(v)
+//		binary.Write(buf, binary.LittleEndian, &v8)
+//	case "UINT16", "UINT", "WORD":
+//		v, e := strconv.ParseUint(value, 10, 16)
+//		if e != nil {
+//			return e
+//		}
+//
+//		v16 := uint16(v)
+//		binary.Write(buf, binary.LittleEndian, &v16)
+//	case "UDINT", "DWORD":
+//		v, e := strconv.ParseUint(value, 10, 32)
+//		if e != nil {
+//			return e
+//		}
+//
+//		v32 := uint32(v)
+//		binary.Write(buf, binary.LittleEndian, &v32)
+//
+//	case "SINT": // Short INT -128 to 127
+//		v, e := strconv.ParseInt(value, 10, 8)
+//		if e != nil {
+//			return e
+//		}
+//
+//		v8 := int8(v)
+//		binary.Write(buf, binary.LittleEndian, &v8)
+//	case "INT":
+//		v, e := strconv.ParseInt(value, 10, 16)
+//		if e != nil {
+//			return e
+//		}
+//
+//		v16 := int16(v)
+//		binary.Write(buf, binary.LittleEndian, &v16)
+//	case "DINT":
+//		v, e := strconv.ParseInt(value, 10, 32)
+//		if e != nil {
+//			return e
+//		}
+//
+//		v32 := int32(v)
+//		binary.Write(buf, binary.LittleEndian, &v32)
+//
+//	case "REAL":
+//		v, e := strconv.ParseFloat(value, 32)
+//		if e != nil {
+//			return e
+//		}
+//
+//		v32 := math.Float32bits(float32(v))
+//		binary.Write(buf, binary.LittleEndian, &v32)
+//	case "LREAL":
+//		v, e := strconv.ParseFloat(value, 64)
+//		if e != nil {
+//			return e
+//		}
+//
+//		v64 := math.Float64bits(v)
+//		binary.Write(buf, binary.LittleEndian, &v64)
+//	case "STRING":
+//		buf.Write([]byte(value))
+//	/*case "TIME":
+//		if stop-start != 4 {return}
+//		i := binary.LittleEndian.Uint32(data[start:stop])
+//		t := time.Unix(0, int64(uint64(i)*uint64(time.Millisecond))-int64(time.Hour) )
+//
+//		newValue = t.Truncate(time.Millisecond).Format("15:04:05.999999999")
+//	case "TOD":
+//		if stop-start != 4 {return}
+//		i := binary.LittleEndian.Uint32(data[start:stop])
+//		t := time.Unix(0, int64(uint64(i)*uint64(time.Millisecond))-int64(time.Hour) )
+//
+//		newValue = t.Truncate(time.Millisecond).Format("15:04")
+//	case "DATE":
+//		if stop-start != 4 {return}
+//		i := binary.LittleEndian.Uint32(data[start:stop])
+//		t := time.Unix(0, int64(uint64(i)*uint64(time.Second)) )
+//
+//		newValue = t.Truncate(time.Millisecond).Format("2006-01-02")
+//	case "DT":
+//		if stop-start != 4 {return}
+//		i := binary.LittleEndian.Uint32(data[start:stop])
+//		t := time.Unix(0, int64(uint64(i)*uint64(time.Second))-int64(time.Hour) )
+//
+//		newValue = t.Truncate(time.Millisecond).Format("2006-01-02 15:04:05")*/
+//	default:
+//		e := fmt.Errorf("Datatype '%s' write is not implemented yet!", symbol.DataType)
+//		log.Error(e)
+//		return e
+//	}
+//
+//	//symbol.Self.conn.Write(symbol.Area, symbol.Offset, buf.Bytes())
+//	handler, err := symbol.Self.conn.GetHandler(symbol.FullName)
+//	if err != nil {
+//		e := fmt.Errorf("Get handler by name failed, name: %s!", symbol.FullName)
+//		log.Error(e)
+//		return e
+//	}
+//	err = symbol.Self.conn.Write(0xF005, handler, buf.Bytes())
+//	if err != nil {
+//		e := fmt.Errorf("Write by handler failed, name: %s!", symbol.FullName)
+//		log.Error(e)
+//		return e
+//	}
+//	err = symbol.conn.ReleaseHandler(handler)
+//	if err != nil {
+//		e := fmt.Errorf("Release handler failed, name: %s!", symbol.FullName)
+//		log.Error(e)
+//		return e
+//	}
+//	return nil
+//
+//}
 
 /*}}}*/
 
@@ -800,6 +833,131 @@ func (dt *ADSSymbol) parse(offset uint32, data []byte) { /*{{{*/
 		dt.Valid = true
 	}
 }
+
+func (dt *ADSSymbol) pack(data []byte) ([]byte, error) {
+
+	var e error
+	for i, _ := range dt.Childs {
+		data, e = dt.Childs[i].Self.pack(data)
+		if e != nil {
+			return nil, e
+		}
+	}
+
+	buf := bytes.NewBuffer(data)
+
+	switch dt.DataType {
+	case "BOOL":
+		v, e := strconv.ParseBool(dt.Value)
+		if e != nil {
+			return nil, e
+		}
+
+		if v {
+			buf.Write([]byte{1})
+		} else {
+			buf.Write([]byte{0})
+		}
+	case "BYTE", "USINT": // Unsigned Short INT 0 to 255
+		v, e := strconv.ParseUint(dt.Value, 10, 8)
+		if e != nil {
+			return nil, e
+		}
+
+		v8 := uint8(v)
+		binary.Write(buf, binary.LittleEndian, &v8)
+	case "UINT16", "UINT", "WORD":
+		v, e := strconv.ParseUint(dt.Value, 10, 16)
+		if e != nil {
+			return nil, e
+		}
+
+		v16 := uint16(v)
+		binary.Write(buf, binary.LittleEndian, &v16)
+	case "UDINT", "DWORD":
+		v, e := strconv.ParseUint(dt.Value, 10, 32)
+		if e != nil {
+			return nil, e
+		}
+
+		v32 := uint32(v)
+		binary.Write(buf, binary.LittleEndian, &v32)
+
+	case "SINT": // Short INT -128 to 127
+		v, e := strconv.ParseInt(dt.Value, 10, 8)
+		if e != nil {
+			return nil, e
+		}
+
+		v8 := int8(v)
+		binary.Write(buf, binary.LittleEndian, &v8)
+	case "INT":
+		v, e := strconv.ParseInt(dt.Value, 10, 16)
+		if e != nil {
+			return nil, e
+		}
+
+		v16 := int16(v)
+		binary.Write(buf, binary.LittleEndian, &v16)
+	case "DINT":
+		v, e := strconv.ParseInt(dt.Value, 10, 32)
+		if e != nil {
+			return nil, e
+		}
+
+		v32 := int32(v)
+		binary.Write(buf, binary.LittleEndian, &v32)
+
+	case "REAL":
+		v, e := strconv.ParseFloat(dt.Value, 32)
+		if e != nil {
+			return nil, e
+		}
+
+		v32 := math.Float32bits(float32(v))
+		binary.Write(buf, binary.LittleEndian, &v32)
+	case "LREAL":
+		v, e := strconv.ParseFloat(dt.Value, 64)
+		if e != nil {
+			return nil, e
+		}
+
+		v64 := math.Float64bits(v)
+		binary.Write(buf, binary.LittleEndian, &v64)
+	case "STRING":
+		buf.Write([]byte(dt.Value))
+	/*case "TIME":
+		if stop-start != 4 {return}
+		i := binary.LittleEndian.Uint32(data[start:stop])
+		t := time.Unix(0, int64(uint64(i)*uint64(time.Millisecond))-int64(time.Hour) )
+
+		newValue = t.Truncate(time.Millisecond).Format("15:04:05.999999999")
+	case "TOD":
+		if stop-start != 4 {return}
+		i := binary.LittleEndian.Uint32(data[start:stop])
+		t := time.Unix(0, int64(uint64(i)*uint64(time.Millisecond))-int64(time.Hour) )
+
+		newValue = t.Truncate(time.Millisecond).Format("15:04")
+	case "DATE":
+		if stop-start != 4 {return}
+		i := binary.LittleEndian.Uint32(data[start:stop])
+		t := time.Unix(0, int64(uint64(i)*uint64(time.Second)) )
+
+		newValue = t.Truncate(time.Millisecond).Format("2006-01-02")
+	case "DT":
+		if stop-start != 4 {return}
+		i := binary.LittleEndian.Uint32(data[start:stop])
+		t := time.Unix(0, int64(uint64(i)*uint64(time.Second))-int64(time.Hour) )
+
+		newValue = t.Truncate(time.Millisecond).Format("2006-01-02 15:04:05")*/
+	default:
+		e := fmt.Errorf("Datatype '%s' write is not implemented yet!", dt.DataType)
+		log.Error(e)
+		return nil, e
+	}
+	return buf.Bytes(), nil
+}
+
 func strcmp(a, b string) int {
 	min := len(b)
 	if len(a) < len(b) {
