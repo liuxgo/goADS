@@ -509,11 +509,13 @@ func (symbol *ADSSymbol) AddDeviceNotification(callback func(*ADSSymbol)) { /*{{
 } /*}}}*/
 
 // Read a symbol and all sub values
-func (symbol *ADSSymbol) Read() { /*{{{*/
+func (symbol *ADSSymbol) Read() error { /*{{{*/
 	log.Debug("Read (", symbol.Area, ":", symbol.Offset, "): ", symbol.FullName)
 
-	res, _ := symbol.conn.Read(symbol.Area, symbol.Offset, symbol.Length)
-
+	res, err := symbol.conn.Read(symbol.Area, symbol.Offset, symbol.Length)
+	if err != nil {
+		return err
+	}
 	for i, _ := range symbol.Childs {
 		segment := symbol.Childs[i].Self
 		segment.parse(symbol.Offset, res.Data)
