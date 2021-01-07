@@ -538,25 +538,30 @@ func (symbol *ADSSymbol) Write() error { /*{{{*/
 		log.Error(e)
 		return e
 	}
-	//symbol.Self.conn.Write(symbol.Area, symbol.Offset, buf.Bytes())
-	handler, err := symbol.Self.conn.GetHandler(symbol.FullName)
+	err = symbol.Self.conn.Write(symbol.Area, symbol.Offset, data)
 	if err != nil {
-		e := fmt.Errorf("Get handler by name failed, name: %s!", symbol.FullName)
+		e := fmt.Errorf("Write symbol failed, name: %s!", symbol.FullName)
 		log.Error(e)
 		return e
 	}
-	err = symbol.Self.conn.Write(0xF005, handler, data)
-	if err != nil {
-		e := fmt.Errorf("Write by handler failed, name: %s!", symbol.FullName)
-		log.Error(e)
-		return e
-	}
-	err = symbol.conn.ReleaseHandler(handler)
-	if err != nil {
-		e := fmt.Errorf("Release handler failed, name: %s!", symbol.FullName)
-		log.Error(e)
-		return e
-	}
+	//handler, err := symbol.Self.conn.GetHandler(symbol.FullName)
+	//if err != nil {
+	//	e := fmt.Errorf("Get handler by name failed, name: %s!", symbol.FullName)
+	//	log.Error(e)
+	//	return e
+	//}
+	//err = symbol.Self.conn.Write(0xF005, handler, data)
+	//if err != nil {
+	//	e := fmt.Errorf("Write by handler failed, name: %s!", symbol.FullName)
+	//	log.Error(e)
+	//	return e
+	//}
+	//err = symbol.conn.ReleaseHandler(handler)
+	//if err != nil {
+	//	e := fmt.Errorf("Release handler failed, name: %s!", symbol.FullName)
+	//	log.Error(e)
+	//	return e
+	//}
 	return nil
 
 }
