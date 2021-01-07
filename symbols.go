@@ -523,6 +523,7 @@ func (symbol *ADSSymbol) Read() error { /*{{{*/
 	if len(symbol.Childs) == 0 {
 		symbol.parse(symbol.Offset, res.Data)
 	}
+
 	return nil
 }
 
