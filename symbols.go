@@ -934,7 +934,8 @@ func (dt *ADSSymbol) pack(data []byte) ([]byte, error) {
 		v64 := math.Float64bits(v)
 		binary.Write(buf, binary.LittleEndian, &v64)
 	case "STRING":
-		buf.Write([]byte(dt.Value))
+		// fill 0x00
+		buf.Write(append([]byte(dt.Value), make([]byte, dt.Length-uint32(len(dt.Value)))...))
 	/*case "TIME":
 		if stop-start != 4 {return}
 		i := binary.LittleEndian.Uint32(data[start:stop])
