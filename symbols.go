@@ -754,7 +754,7 @@ func (dt *ADSSymbol) parse(offset uint32, data []byte) { /*{{{*/
 			var i int8
 			binary.Read(buf, binary.LittleEndian, &i)
 			newValue = strconv.FormatInt(int64(i), 10)
-		case "UINT", "WORD":
+		case "UINT16", "WORD":
 			if stop-start != 2 {
 				return
 			}
